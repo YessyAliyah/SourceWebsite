@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Source Code Viewer</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --input-bg: #1e293b;
+            --input-border: #334155;
+            --input-focus: #3b82f6;
+            --button-bg: #2563eb;
+            --button-hover: #1d4ed8;
+            --button-active: #1e40af;
+            --section-bg: #1e293b;
+            --section-border: #334155;
+            --section-header-bg: #1e293b;
+            --section-header-hover: #334155;
+            --accent-color: #3b82f6;
+            --error-color: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        h1 {
+            font-weight: 600;
+            font-size: 1.75rem;
+            margin: 0;
+            color: var(--text-color);
+        }
+        .input-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+        input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            background-color: var(--input-bg);
+            border: 1px solid var(--section-border);
+            border-radius: 0.375rem;
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        button:hover {
+            background: var(--button-hover);
+        }
+        button:active {
+            background: var(--button-active);
+            transform: scale(0.98);
+        }
+        .component-section {
+            margin-bottom: 1rem;
+            border: 1px solid var(--section-border);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .component-section:hover {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .section-header {
+            padding: 1rem 1.25rem;
+            background-color: var(--section-header-bg);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        .section-header:hover {
+            background-color: var(--section-header-hover);
+        }
+        .section-header span:first-child {
+            font-weight: 500;
+            color: var(--accent-color);
+        }
+        .section-content {
+            padding: 1.25rem;
+            background-color: var(--section-bg);
+            white-space: pre-wrap;
+            font-family: 'Fira Code', monospace;
+            max-height: 300px;
+            overflow: auto;
+            display: none;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+        .section-content.active {
+            display: block;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .arrow {
+            transition: transform 0.3s ease;
+            color: var(--accent-color);
+        }
+        .arrow.open {
+            transform: rotate(90deg);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error {
+            color: var(--error-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Website Source Code Viewer</h1>
+        <div class="input-group">
+            <input type="text" id="urlInput" placeholder="Enter website URL (e.g., https://example.com)">
+            <button id="fetchButton">Get Source Code</button>
+        </div>
+        <div id="results">
+            <div class="component-section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <span>HTML</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="section-content" id="html-result"></div>
+            </div>
+            <div class="component-section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <span>CSS</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="section-content" id="css-result"></div>
+            </div>
+            <div class="component-section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <span>JavaScript</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="section-content" id="js-result"></div>
+            </div>
+            <div class="component-section">
+                <div class="section-header" onclick="toggleSection(this)">
+                    <span>Full Source</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="section-content" id="full-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            const arrow = header.querySelector('.arrow');
+            
+            content.classList.toggle('active');
+            arrow.classList.toggle('open');
+        }
+
+        document.getElementById('fetchButton').addEventListener('click', async () => {
+            const url = document.getElementById('urlInput').value.trim();
+            const htmlResult = document.getElementById('html-result');
+            const cssResult = document.getElementById('css-result');
+            const jsResult = document.getElementById('js-result');
+            const fullResult = document.getElementById('full-result');
+            
+            if (!url) {
+                htmlResult.textContent = 'Please enter a URL';
+                htmlResult.classList.add('active');
+                return;
+            }
+
+            try {
+                htmlResult.textContent = 'Fetching source code...';
+                htmlResult.classList.add('active');
+                
+                const response = await fetch('/fetch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                htmlResult.textContent = data.html || 'No HTML content found';
+                cssResult.textContent = data.css || 'No CSS content found';
+                jsResult.textContent = data.js || 'No JavaScript content found';
+                fullResult.textContent = data.full;
+                
+                // Auto-open sections with content
+                if (data.html) document.querySelector('#html-result').closest('.component-section').querySelector('.section-header').click();
+                if (data.css) document.querySelector('#css-result').closest('.component-section').querySelector('.section-header').click();
+                if (data.js) document.querySelector('#js-result').closest('.component-section').querySelector('.section-header').click();
+            } catch (error) {
+                htmlResult.textContent = `Error: ${error.message}`;
+                htmlResult.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
